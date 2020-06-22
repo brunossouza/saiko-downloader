@@ -12,6 +12,7 @@ import (
 	"github.com/gocolly/colly/extensions"
 )
 
+// Anime type creation
 type Anime struct {
 	name    string
 	epsodio string
@@ -33,14 +34,11 @@ func addAnimeToList(element *colly.HTMLElement) {
 	}
 }
 
-func getAnimeLastUpdates() {
+func getCollyConfig() *colly.Collector {
 	c := colly.NewCollector()
 	extensions.RandomUserAgent(c)
 
-	c.OnHTML("#content", func(e *colly.HTMLElement) {
-		addAnimeToList(e)
-	})
-	c.Visit("https://saikoanimes.net/")
+	return c
 }
 
 func readOpcao() (opcao int) {
@@ -59,7 +57,34 @@ func readOpcao() (opcao int) {
 	return
 }
 
-func showMenu() {
+func getAnimeLastUpdates() {
+	c := getCollyConfig()
+
+	c.OnHTML("#content", func(e *colly.HTMLElement) {
+		addAnimeToList(e)
+	})
+	c.Visit("https://saikoanimes.net/")
+}
+
+func getAnimePage(anime Anime) {
+	c := getCollyConfig()
+
+	c.OnHTML("div[class='ani-titulo']", func(e *colly.HTMLElement) {
+		fmt.Println(e.Text)
+	})
+
+	// c.OnResponse(func(r *colly.Response) {
+	// 	fmt.Println(string(r.Body))
+	// })
+
+	c.OnRequest(func(r *colly.Request) {
+		fmt.Println("Visiting", r.URL)
+	})
+
+	c.Visit(anime.link)
+}
+
+func menuHandler() {
 	fmt.Print("---------------------------------------------------\n")
 	fmt.Print("|Anime\t|Episodio\t|Nome\t\n")
 	fmt.Print("---------------------------------------------------\n")
@@ -70,10 +95,11 @@ func showMenu() {
 	var opcao = readOpcao()
 
 	var anime = animesList[opcao]
-	fmt.Println(anime)
+
+	getAnimePage(anime)
 }
 
 func main() {
 	getAnimeLastUpdates()
-	showMenu()
+	menuHandler()
 }
